@@ -1,76 +1,474 @@
-function calculateKPI(data){
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-document.getElementById("totalBooking").innerHTML =
-data.length;
+<title>Corporate Vehicle Management Dashboard</title>
 
-const vehicleSet =
-new Set();
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-const driverSet =
-new Set();
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-let totalCost = 0;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-let completed = 0;
-let cancelled = 0;
+<style>
 
-data.forEach(row=>{
-
-const status =
-String(row["Status"] || "");
-
-if(status.includes("เสร็จ")){
-completed++;
+:root{
+--primary:#0b6e4f;
+--secondary:#198754;
+--accent:#20c997;
+--light:#f4fff8;
+--dark:#064e3b;
 }
 
-if(status.includes("ยกเลิก")){
-cancelled++;
+body{
+font-family:'Noto Sans Thai',sans-serif;
+background:#f4f7f5;
 }
 
-if(row["ทะเบียนรถ"]){
-vehicleSet.add(
-row["ทะเบียนรถ"]
+.header{
+background:linear-gradient(135deg,#064e3b,#198754,#20c997);
+color:#fff;
+padding:25px;
+box-shadow:0 3px 15px rgba(0,0,0,.15);
+}
+
+.dashboard-card{
+border:none;
+border-radius:18px;
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+transition:.3s;
+}
+
+.dashboard-card:hover{
+transform:translateY(-5px);
+}
+
+.kpi{
+font-size:34px;
+font-weight:700;
+color:#198754;
+}
+
+.section{
+background:#fff;
+border-radius:18px;
+padding:20px;
+margin-top:20px;
+box-shadow:0 3px 12px rgba(0,0,0,.08);
+}
+
+.table thead{
+background:#198754;
+color:#fff;
+}
+
+.footer{
+text-align:center;
+padding:20px;
+color:#777;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<div class="container-fluid">
+
+<div class="row align-items-center">
+
+<div class="col-lg-8">
+
+<h2>🚗 Corporate Vehicle Management Dashboard</h2>
+
+<p class="mb-0">
+Fleet Utilization & Cost Monitoring
+</p>
+
+</div>
+
+<div class="col-lg-4">
+
+<input
+type="file"
+class="form-control"
+id="excelFile"
+accept=".xlsx,.xls">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="container-fluid mt-4">
+
+<div class="row g-3">
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<div class="card-body text-center">
+
+<div class="kpi" id="totalRows">0</div>
+
+<div>Total Records</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<div class="card-body text-center">
+
+<div class="kpi" id="columnCount">0</div>
+
+<div>Total Columns</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<div class="card-body text-center">
+
+<div class="kpi" id="sheetName">-</div>
+
+<div>Sheet Name</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<div class="card-body text-center">
+
+<div class="kpi" id="uploadStatus">-</div>
+
+<div>Status</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<div class="row">
+
+<div class="col-md-6">
+
+<input
+type="text"
+id="searchBox"
+class="form-control"
+placeholder="ค้นหาข้อมูล...">
+
+</div>
+
+<div class="col-md-6 text-end">
+
+<button
+class="btn btn-success"
+onclick="exportCSV()">
+
+Export CSV
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h5>ข้อมูลจาก Excel</h5>
+
+<div class="table-responsive">
+
+<table class="table table-bordered table-hover">
+
+<thead id="tableHead">
+
+</thead>
+
+<tbody id="tableBody">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="footer">
+
+Corporate Vehicle Management Dashboard
+
+</div>
+
+<script>
+
+let excelData = [];
+let filteredData = [];
+
+document
+.getElementById("excelFile")
+.addEventListener("change", loadExcel);
+
+document
+.getElementById("searchBox")
+.addEventListener("keyup", searchData);
+
+function loadExcel(event){
+
+const file = event.target.files[0];
+
+if(!file) return;
+
+const reader = new FileReader();
+
+reader.onload = function(e){
+
+const data =
+new Uint8Array(e.target.result);
+
+const workbook =
+XLSX.read(data,{
+type:'array'
+});
+
+const firstSheet =
+workbook.SheetNames[0];
+
+document.getElementById(
+"sheetName"
+).innerText = firstSheet;
+
+const worksheet =
+workbook.Sheets[firstSheet];
+
+excelData =
+XLSX.utils.sheet_to_json(
+worksheet,
+{
+defval:""
+}
 );
+
+filteredData = excelData;
+
+updateDashboard();
+
+};
+
+reader.readAsArrayBuffer(file);
+
 }
 
-if(row["พนักงานขับรถ"]){
-driverSet.add(
-row["พนักงานขับรถ"]
+function updateDashboard(){
+
+if(excelData.length===0){
+
+alert("ไม่พบข้อมูล");
+
+return;
+
+}
+
+document.getElementById(
+"totalRows"
+).innerText =
+excelData.length;
+
+document.getElementById(
+"columnCount"
+).innerText =
+Object.keys(
+excelData[0]
+).length;
+
+document.getElementById(
+"uploadStatus"
+).innerText =
+"✓";
+
+buildTable(filteredData);
+
+}
+
+function buildTable(data){
+
+const tableHead =
+document.getElementById(
+"tableHead"
 );
-}
 
-const cost =
-parseFloat(
-row["ค่าใช้จ่าย"] || 0
+const tableBody =
+document.getElementById(
+"tableBody"
 );
 
-if(!isNaN(cost)){
-totalCost += cost;
+tableHead.innerHTML = '';
+tableBody.innerHTML = '';
+
+if(data.length===0){
+
+tableBody.innerHTML =
+"<tr><td>ไม่พบข้อมูล</td></tr>";
+
+return;
+
 }
+
+const columns =
+Object.keys(data[0]);
+
+let headerRow = "<tr>";
+
+columns.forEach(col=>{
+
+headerRow += `
+<th>${col}</th>
+`;
 
 });
 
-document.getElementById(
-"completedJob"
-).innerHTML = completed;
+headerRow += "</tr>";
 
-document.getElementById(
-"cancelJob"
-).innerHTML = cancelled;
+tableHead.innerHTML =
+headerRow;
 
-document.getElementById(
-"vehicleCount"
-).innerHTML =
-vehicleSet.size;
+data.forEach(row=>{
 
-document.getElementById(
-"driverCount"
-).innerHTML =
-driverSet.size;
+let tableRow="<tr>";
 
-document.getElementById(
-"totalCost"
-).innerHTML =
-"฿" + totalCost.toLocaleString();
+columns.forEach(col=>{
+
+tableRow += `
+<td>${row[col]}</td>
+`;
+
+});
+
+tableRow+="</tr>";
+
+tableBody.innerHTML +=
+tableRow;
+
+});
 
 }
+
+function searchData(){
+
+const keyword =
+document
+.getElementById("searchBox")
+.value
+.toLowerCase();
+
+filteredData =
+excelData.filter(row=>{
+
+return Object.values(row)
+
+.join(" ")
+
+.toLowerCase()
+
+.includes(keyword);
+
+});
+
+buildTable(filteredData);
+
+}
+
+function exportCSV(){
+
+if(filteredData.length===0){
+
+alert("ไม่มีข้อมูล");
+
+return;
+
+}
+
+let csv = '';
+
+const columns =
+Object.keys(filteredData[0]);
+
+csv +=
+columns.join(",") +
+"\n";
+
+filteredData.forEach(row=>{
+
+const values =
+
+columns.map(col =>
+
+`"${row[col]}"`
+);
+
+csv +=
+values.join(",") +
+"\n";
+
+});
+
+const blob =
+new Blob([csv],{
+type:"text/csv"
+});
+
+const link =
+document.createElement("a");
+
+link.href =
+URL.createObjectURL(blob);
+
+link.download =
+"Vehicle_Report.csv";
+
+link.click();
+
+}
+
+</script>
+
+</body>
+</html>
