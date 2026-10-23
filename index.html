@@ -2,553 +2,66 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Corporate Vehicle Management Dashboard</title>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-
-body{
-    font-family:'Noto Sans Thai',sans-serif;
-    background:#f4f7f5;
-}
-
-.header{
-    background:linear-gradient(135deg,#0B6E4F,#198754,#20C997);
-    color:white;
-    padding:20px;
-}
-
-.kpi-card{
-    border:none;
-    border-radius:16px;
-    box-shadow:0 3px 12px rgba(0,0,0,.08);
-}
-
-.kpi-number{
-    font-size:32px;
-    font-weight:bold;
-    color:#198754;
-}
-
-.section{
-    background:white;
-    border-radius:16px;
-    padding:20px;
-    margin-top:20px;
-    box-shadow:0 3px 12px rgba(0,0,0,.08);
-}
-
-.table-responsive{
-    max-height:500px;
-}
-
+body{font-family:'Noto Sans Thai',sans-serif;background:#eef4f0}
+.header{background:linear-gradient(135deg,#0b6e4f,#198754,#20c997);color:#fff;padding:24px}
+.cardx{background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.08);height:100%}
+.kpi{font-size:34px;font-weight:700;color:#198754}.section{margin-top:20px}
 </style>
 </head>
-
 <body>
-
-<div class="header">
-<div class="container-fluid">
-
-<h2>🚗 Dashboard บริหารการใช้งานรถส่วนกลาง</h2>
-
-<p class="mb-0">
-Corporate Vehicle Management Dashboard
-</p>
-
-</div>
-</div>
-
-<div class="container-fluid mt-4">
-
-<div class="row mb-3">
-
-<div class="col-md-6">
-<input type="file"
-       id="excelFile"
-       class="form-control"
-       accept=".xlsx,.xls">
-</div>
-
-<div class="col-md-6">
-<input type="text"
-       id="searchBox"
-       class="form-control"
-       placeholder="ค้นหาข้อมูล">
-</div>
-
-</div>
-
+<div class="header"><div class="container-fluid"><div class="row align-items-center"><div class="col-lg-8"><h1>🚗 Corporate Vehicle Management Dashboard</h1><p>Executive Fleet Utilization & Cost Monitoring</p></div><div class="col-lg-4"><input type="file" id="excelFile" class="form-control" accept=".xlsx,.xls"></div></div></div></div>
+<div class="container-fluid py-4">
 <div class="row g-3">
-
-<div class="col-md-2">
-<div class="card kpi-card">
-<div class="card-body text-center">
-<div id="totalBooking" class="kpi-number">0</div>
-<div>จำนวนงาน</div>
+<div class="col-md-2"><div class="cardx text-center"><div class="kpi" id="trip">0</div>Total Trips</div></div>
+<div class="col-md-2"><div class="cardx text-center"><div class="kpi" id="done">0</div>Completed</div></div>
+<div class="col-md-2"><div class="cardx text-center"><div class="kpi" id="pending">0</div>Pending</div></div>
+<div class="col-md-2"><div class="cardx text-center"><div class="kpi" id="cancel">0</div>Cancelled</div></div>
+<div class="col-md-2"><div class="cardx text-center"><div class="kpi" id="cars">0</div>Vehicles</div></div>
+<div class="col-md-2"><div class="cardx text-center"><div class="kpi" id="cost">0</div>Cost</div></div>
+</div>
+<div class="section cardx"><h4>Executive Summary</h4><div id="summary">อัปโหลดไฟล์ Excel เพื่อสร้างรายงานผู้บริหาร</div></div>
+<div class="row section g-3">
+<div class="col-lg-6"><div class="cardx"><h5>Status Analysis</h5><canvas id="statusChart"></canvas></div></div>
+<div class="col-lg-6"><div class="cardx"><h5>Top Vehicle Usage</h5><canvas id="vehicleChart"></canvas></div></div>
 </div>
 </div>
-</div>
-
-<div class="col-md-2">
-<div class="card kpi-card">
-<div class="card-body text-center">
-<div id="completed" class="kpi-number">0</div>
-<div>เสร็จสิ้น</div>
-</div>
-</div>
-</div>
-
-<div class="col-md-2">
-<div class="card kpi-card">
-<div class="card-body text-center">
-<div id="pending" class="kpi-number">0</div>
-<div>ดำเนินการ</div>
-</div>
-</div>
-</div>
-
-<div class="col-md-2">
-<div class="card kpi-card">
-<div class="card-body text-center">
-<div id="cancelled" class="kpi-number">0</div>
-<div>ยกเลิก</div>
-</div>
-</div>
-</div>
-
-<div class="col-md-2">
-<div class="card kpi-card">
-<div class="card-body text-center">
-<div id="vehicleCount" class="kpi-number">0</div>
-<div>จำนวนรถ</div>
-</div>
-</div>
-</div>
-
-<div class="col-md-2">
-<div class="card kpi-card">
-<div class="card-body text-center">
-<div id="totalCost" class="kpi-number">0</div>
-<div>ค่าใช้จ่าย</div>
-</div>
-</div>
-</div>
-
-</div>
-
-<div class="section">
-
-<h5>Executive Summary</h5>
-
-<div id="summary">
-รอการอัปโหลด Excel
-</div>
-
-</div>
-
-<div class="row">
-
-<div class="col-lg-4">
-<div class="section">
-<h5>Status Summary</h5>
-<canvas id="statusChart"></canvas>
-</div>
-</div>
-
-<div class="col-lg-4">
-<div class="section">
-<h5>Top Vehicle</h5>
-<canvas id="vehicleChart"></canvas>
-</div>
-</div>
-
-<div class="col-lg-4">
-<div class="section">
-<h5>Top Driver</h5>
-<canvas id="driverChart"></canvas>
-</div>
-</div>
-
-</div>
-
-<div class="section">
-
-<div class="d-flex justify-content-between">
-
-<h5>ข้อมูลการจอง</h5>
-
-<button class="btn btn-success"
-        onclick="exportCSV()">
-
-Export CSV
-
-</button>
-
-</div>
-
-<div class="table-responsive mt-3">
-
-<table class="table table-striped table-bordered">
-
-<thead id="tableHead"></thead>
-
-<tbody id="tableBody"></tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</div>
-
 <script>
-
-let excelData=[];
-let filteredData=[];
-
-let statusChart=null;
-let vehicleChart=null;
-let driverChart=null;
-
-document
-.getElementById("excelFile")
-.addEventListener("change",loadExcel);
-
-document
-.getElementById("searchBox")
-.addEventListener("keyup",searchData);
-
-function loadExcel(event){
-
-const file=event.target.files[0];
-
-if(!file) return;
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-
-const workbook=XLSX.read(
-new Uint8Array(e.target.result),
-{
-type:"array"
-});
-
-const worksheet=
-workbook.Sheets[
-workbook.SheetNames[0]
-];
-
-excelData=
-XLSX.utils.sheet_to_json(
-worksheet,
-{
-defval:""
-}
-);
-
-filteredData=excelData;
-
-calculateDashboard();
-
-buildTable(filteredData);
-
+let statusChart,vehicleChart;
+document.getElementById('excelFile').addEventListener('change',e=>{
+const f=e.target.files[0]; if(!f)return;
+const r=new FileReader();
+r.onload=x=>{
+const wb=XLSX.read(new Uint8Array(x.target.result),{type:'array'});
+const ws=wb.Sheets[wb.SheetNames[0]];
+const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+calculate(data);
 };
-
-reader.readAsArrayBuffer(file);
-
-}
-
-function calculateDashboard(){
-
-let complete=0;
-let pending=0;
-let cancel=0;
-let totalCost=0;
-
-const vehicles={};
-const drivers={};
-
-excelData.forEach(row=>{
-
-const status=
-String(row["Status"]||"");
-
-if(status.includes("เสร็จ")){
-
-complete++;
-
-}else if(
-status.includes("ยกเลิก")
-){
-
-cancel++;
-
-}else{
-
-pending++;
-
-}
-
-const vehicle=
-row["ทะเบียนรถ"]||"";
-
-if(vehicle){
-
-vehicles[vehicle]=
-(vehicles[vehicle]||0)+1;
-
-}
-
-const driver=
-row["พนักงานขับรถ"]||"";
-
-if(driver){
-
-drivers[driver]=
-(drivers[driver]||0)+1;
-
-}
-
-const cost=
-parseFloat(
-row["ค่าใช้จ่าย"]||
-0
-);
-
-if(!isNaN(cost)){
-
-totalCost+=cost;
-
-}
-
+r.readAsArrayBuffer(f);
 });
-
-document
-.getElementById("totalBooking")
-.innerText=excelData.length;
-
-document
-.getElementById("completed")
-.innerText=complete;
-
-document
-.getElementById("pending")
-.innerText=pending;
-
-document
-.getElementById("cancelled")
-.innerText=cancel;
-
-document
-.getElementById("vehicleCount")
-.innerText=
-Object.keys(vehicles).length;
-
-document
-.getElementById("totalCost")
-.innerText=
-"฿"+totalCost.toLocaleString();
-
-document
-.getElementById("summary")
-.innerHTML=`
-จำนวนงานทั้งหมด <b>${excelData.length}</b> งาน<br>
-งานเสร็จ <b>${complete}</b> งาน<br>
-กำลังดำเนินการ <b>${pending}</b> งาน<br>
-ยกเลิก <b>${cancel}</b> งาน<br>
-ค่าใช้จ่ายรวม <b>฿${totalCost.toLocaleString()}</b>
-`;
-
-buildCharts(
-vehicles,
-drivers,
-complete,
-pending,
-cancel
-);
-
-}
-
-function buildCharts(
-vehicles,
-drivers,
-complete,
-pending,
-cancel
-){
-
-if(statusChart) statusChart.destroy();
-
-statusChart=new Chart(
-document.getElementById("statusChart"),
-{
-type:"doughnut",
-data:{
-labels:[
-"เสร็จสิ้น",
-"ดำเนินการ",
-"ยกเลิก"
-],
-datasets:[{
-data:[
-complete,
-pending,
-cancel
-],
-backgroundColor:[
-"#198754",
-"#ffc107",
-"#dc3545"
-]
-}]
-}
+function calculate(data){
+let comp=0,pend=0,canc=0,totalCost=0; const veh={};
+data.forEach(r=>{
+const st=String(r.Status||r.STATUS||'');
+if(st.includes('เสร็จ')) comp++; else if(st.includes('ยกเลิก')) canc++; else pend++;
+const car=r['ทะเบียนรถ']||r.Vehicle||''; if(car) veh[car]=(veh[car]||0)+1;
+const c=parseFloat(r['ค่าใช้จ่าย']||0); if(!isNaN(c)) totalCost+=c;
 });
-
-const topVehicle=
-Object.entries(vehicles)
-.sort((a,b)=>b[1]-a[1])
-.slice(0,10);
-
-if(vehicleChart) vehicleChart.destroy();
-
-vehicleChart=new Chart(
-document.getElementById("vehicleChart"),
-{
-type:"bar",
-data:{
-labels:topVehicle.map(x=>x[0]),
-datasets:[{
-label:"จำนวนงาน",
-data:topVehicle.map(x=>x[1]),
-backgroundColor:"#198754"
-}]
+trip.textContent=data.length; done.textContent=comp; pending.textContent=pend; cancel.textContent=canc;
+cars.textContent=Object.keys(veh).length; cost.textContent='฿'+Math.round(totalCost).toLocaleString();
+const top=Object.entries(veh).sort((a,b)=>b[1]-a[1])[0];
+summary.innerHTML=`จำนวนการจอง <b>${data.length}</b> งาน | งานเสร็จ <b>${comp}</b> งาน | ค่าใช้จ่ายรวม <b>฿${Math.round(totalCost).toLocaleString()}</b> | รถใช้งานสูงสุด <b>${top?top[0]:'-'}</b>`;
+if(statusChart)statusChart.destroy();
+statusChart=new Chart(document.getElementById('statusChart'),{type:'doughnut',data:{labels:['Completed','Pending','Cancelled'],datasets:[{data:[comp,pend,canc],backgroundColor:['#198754','#ffc107','#dc3545']} ]}});
+const top10=Object.entries(veh).sort((a,b)=>b[1]-a[1]).slice(0,10);
+if(vehicleChart)vehicleChart.destroy();
+vehicleChart=new Chart(document.getElementById('vehicleChart'),{type:'bar',data:{labels:top10.map(x=>x[0]),datasets:[{label:'Trips',data:top10.map(x=>x[1]),backgroundColor:'#198754'}]}});
 }
-});
-
-const topDriver=
-Object.entries(drivers)
-.sort((a,b)=>b[1]-a[1])
-.slice(0,10);
-
-if(driverChart) driverChart.destroy();
-
-driverChart=new Chart(
-document.getElementById("driverChart"),
-{
-type:"bar",
-data:{
-labels:topDriver.map(x=>x[0]),
-datasets:[{
-label:"จำนวนงาน",
-data:topDriver.map(x=>x[1]),
-backgroundColor:"#20C997"
-}]
-}
-});
-
-}
-
-function buildTable(data){
-
-if(data.length===0) return;
-
-const columns=
-Object.keys(data[0]);
-
-document
-.getElementById("tableHead")
-.innerHTML=
-"<tr>"+
-columns.map(
-c=>`<th>${c}</th>`
-).join("")+
-"</tr>";
-
-document
-.getElementById("tableBody")
-.innerHTML=
-data.map(row=>
-"<tr>"+
-columns.map(
-c=>`<td>${row[c]}</td>`
-).join("")+
-"</tr>"
-).join("");
-
-}
-
-function searchData(){
-
-const keyword=
-document
-.getElementById("searchBox")
-.value
-.toLowerCase();
-
-filteredData=
-excelData.filter(r=>
-Object.values(r)
-.join(" ")
-.toLowerCase()
-.includes(keyword)
-);
-
-buildTable(filteredData);
-
-}
-
-function exportCSV(){
-
-if(filteredData.length===0) return;
-
-const columns=
-Object.keys(filteredData[0]);
-
-let csv=
-columns.join(",")+"\n";
-
-filteredData.forEach(row=>{
-
-csv+=columns
-.map(c=>`"${row[c]}"`)
-.join(",");
-
-csv+="\n";
-
-});
-
-const blob=
-new Blob(
-[csv],
-{type:"text/csv"}
-);
-
-const link=
-document.createElement("a");
-
-link.href=
-URL.createObjectURL(blob);
-
-link.download=
-"Vehicle_Report.csv";
-
-link.click();
-
-}
-
 </script>
-
-</body>
-</html>
+</body></html>
