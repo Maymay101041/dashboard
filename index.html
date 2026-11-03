@@ -1,363 +1,353 @@
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Driver Payroll Dashboard</title>
+<title>GPS Vehicle Dashboard</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
-    font-family:'Segoe UI',sans-serif;
-    background:#f3f6f9;
+    margin:0;
     padding:20px;
+    background:#f5f6fa;
+    font-family:Segoe UI,Tahoma,sans-serif;
 }
 
 .container{
-    max-width:1400px;
-    margin:auto;
+    background:#fff;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 3px 15px rgba(0,0,0,.1);
 }
 
-.header{
-    background:#0b7a3e;
-    color:white;
-    padding:20px;
-    border-radius:15px;
+h1{
+    color:#107c41;
     margin-bottom:20px;
+}
+
+.cards{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin:25px 0;
 }
 
 .card{
-    background:white;
+    flex:1;
+    min-width:250px;
+    background:#14833b;
+    color:white;
     padding:20px;
     border-radius:15px;
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
-    margin-bottom:20px;
 }
 
-.summary{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:15px;
+.card h3{
+    margin:0;
+    font-size:22px;
 }
 
-.box{
-    background:#0b7a3e;
-    color:white;
-    padding:20px;
-    border-radius:12px;
-    text-align:center;
-}
-
-.box h2{
-    font-size:32px;
-}
-
-input[type=file]{
-    padding:10px;
-}
-
-button{
-    background:#0b7a3e;
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:8px;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#086331;
+.card p{
+    margin:15px 0 0;
+    font-size:50px;
+    font-weight:bold;
 }
 
 table{
     width:100%;
     border-collapse:collapse;
-    margin-top:15px;
-}
-
-table th{
-    background:#0b7a3e;
-    color:white;
-}
-
-table th,
-table td{
-    border:1px solid #ddd;
-    padding:10px;
-    text-align:center;
-}
-
-.footer{
-    text-align:center;
     margin-top:20px;
-    color:#777;
+}
+
+th{
+    background:#14833b;
+    color:white;
+    padding:12px;
+}
+
+td{
+    padding:10px;
+    border:1px solid #ddd;
+    text-align:center;
+}
+
+tr:nth-child(even){
+    background:#f8f8f8;
+}
+
+.status{
+    margin-top:15px;
+    color:#444;
+    font-size:18px;
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="container">
 
-    <div class="header">
-        <h1>🚗 Driver Payroll Dashboard</h1>
-        <p>ระบบคำนวณเวลาทำงานจาก GPS Report</p>
-    </div>
+<h1>🚐 GPS Vehicle Dashboard</h1>
 
-    <div class="card">
-        <h3>อัปโหลดไฟล์ Excel</h3>
-        <br>
-        <input type="file" id="excelFile" accept=".xlsx,.xls">
-    </div>
+<input type="file" id="excelFile" accept=".xlsx,.xls">
 
-    <div class="summary">
+<div class="status" id="status">
+เลือกไฟล์ Excel
+</div>
 
-        <div class="box">
-            <h2 id="totalDays">0</h2>
-            <p>จำนวนวัน</p>
-        </div>
+<div class="cards">
 
-        <div class="box">
-            <h2 id="totalHours">0</h2>
-            <p>ชั่วโมงรวม</p>
-        </div>
+<div class="card">
+<h3>จำนวนวันใช้งาน</h3>
+<p id="days">0</p>
+</div>
 
-        <div class="box">
-            <h2 id="avgHours">0</h2>
-            <p>เฉลี่ยต่อวัน</p>
-        </div>
+<div class="card">
+<h3>จำนวนเที่ยววิ่ง</h3>
+<p id="trips">0</p>
+</div>
 
-    </div>
+<div class="card">
+<h3>ระยะทางรวม (กม.)</h3>
+<p id="distance">0</p>
+</div>
 
-    <div class="card">
+</div>
 
-        <button onclick="exportExcel()">
-            Export Summary
-        </button>
+<table>
 
-        <table id="resultTable">
+<thead>
+<tr>
+<th>วันที่</th>
+<th>เริ่มใช้งาน</th>
+<th>สิ้นสุดใช้งาน</th>
+<th>เที่ยววิ่ง</th>
+<th>ระยะทางรวม (กม.)</th>
+</tr>
+</thead>
 
-            <thead>
-                <tr>
-                    <th>วันที่</th>
-                    <th>เริ่มงาน</th>
-                    <th>สิ้นสุดงาน</th>
-                    <th>ชั่วโมงทำงาน</th>
-                </tr>
-            </thead>
+<tbody id="tableBody">
+</tbody>
 
-            <tbody></tbody>
-
-        </table>
-
-    </div>
+</table>
 
 </div>
 
 <script>
 
-let summaryData = [];
-
 document
 .getElementById("excelFile")
-.addEventListener("change", handleFile);
+.addEventListener("change",loadExcel);
 
-function handleFile(event){
+function loadExcel(e){
 
-    const file = event.target.files[0];
+const file=e.target.files[0];
 
-    const reader = new FileReader();
+if(!file) return;
 
-    reader.onload = function(e){
+document.getElementById("status").innerHTML=
+"กำลังอ่านไฟล์ : "+file.name;
 
-        const data = e.target.result;
+const reader=new FileReader();
 
-        const workbook = XLSX.read(
-            data,
-            {type:'binary'}
-        );
+reader.onload=function(evt){
 
-        const sheetName =
-        workbook.SheetNames[0];
+try{
 
-        const worksheet =
-        workbook.Sheets[sheetName];
+const data=new Uint8Array(evt.target.result);
 
-        const json =
-        XLSX.utils.sheet_to_json(
-            worksheet,
-            {
-                header:1,
-                raw:true
-            }
-        );
+const workbook=XLSX.read(data,{type:"array"});
 
-        processData(json);
+const sheet=
+workbook.Sheets[
+workbook.SheetNames[0]
+];
 
-    }
+const rows=
+XLSX.utils.sheet_to_json(sheet,{
+raw:true
+});
 
-    reader.readAsBinaryString(file);
+processData(rows);
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById("status").innerHTML=
+"❌ Error : "+error.message;
 
 }
 
-function excelDateToJSDate(serial){
+};
 
-    return new Date(
-        (serial - 25569) *
-        86400 *
-        1000
-    );
+reader.readAsArrayBuffer(file);
+
+}
+
+function excelDate(serial){
+
+if(typeof serial!=="number") return serial;
+
+const utcDays =
+Math.floor(serial-25569);
+
+const utcValue =
+utcDays*86400;
+
+const date=
+new Date(utcValue*1000);
+
+const day=
+String(date.getDate()).padStart(2,'0');
+
+const month=
+String(date.getMonth()+1).padStart(2,'0');
+
+const year=
+date.getFullYear();
+
+return `${day}/${month}/${year}`;
+
+}
+
+function excelTime(serial){
+
+if(typeof serial!=="number") return serial;
+
+const totalSeconds=
+Math.round(serial*86400);
+
+const h=
+Math.floor(totalSeconds/3600);
+
+const m=
+Math.floor((totalSeconds%3600)/60);
+
+const s=
+totalSeconds%60;
+
+return (
+String(h).padStart(2,'0')+":"
++
+String(m).padStart(2,'0')+":"
++
+String(s).padStart(2,'0')
+);
 
 }
 
 function processData(rows){
 
-    let daily = {};
+const summary={};
 
-    rows.forEach(row => {
+let totalTrips=0;
+let totalDistance=0;
 
-        row.forEach(cell => {
+rows.forEach(row=>{
 
-            if(typeof cell === "number"){
+const status =
+String(
+row["สถานะ"] ||
+row["Status"] ||
+""
+).trim();
 
-                let dt =
-                excelDateToJSDate(cell);
+if(!status.includes("รถวิ่ง"))
+return;
 
-                if(!isNaN(dt)){
+let date =
+row["วันที่"];
 
-                    let day =
-                    dt.toLocaleDateString(
-                        "th-TH"
-                    );
+let start =
+row["เวลาเริ่มต้น"];
 
-                    if(!daily[day]){
-                        daily[day] = [];
-                    }
+let end =
+row["เวลาสิ้นสุด"];
 
-                    daily[day].push(dt);
+date = excelDate(date);
+start = excelTime(start);
+end = excelTime(end);
 
-                }
+const distance =
+parseFloat(
+row["ระยะทางรวม"] ||
+row["ระยะทางรวม (กม.)"] ||
+0
+);
 
-            }
+if(!summary[date]){
 
-        });
-
-    });
-
-    summaryData = [];
-
-    let totalHours = 0;
-
-    Object.keys(daily).forEach(day=>{
-
-        const times =
-        daily[day]
-        .sort((a,b)=>a-b);
-
-        const start =
-        times[0];
-
-        const end =
-        times[times.length-1];
-
-        const hours =
-        (
-            end - start
-        ) / 1000 / 60 / 60;
-
-        totalHours += hours;
-
-        summaryData.push({
-
-            date:day,
-
-            start:start.toLocaleTimeString(
-                "th-TH"
-            ),
-
-            finish:end.toLocaleTimeString(
-                "th-TH"
-            ),
-
-            hours:hours.toFixed(2)
-
-        });
-
-    });
-
-    renderTable();
-
-    document
-    .getElementById("totalDays")
-    .innerText =
-    summaryData.length;
-
-    document
-    .getElementById("totalHours")
-    .innerText =
-    totalHours.toFixed(2);
-
-    document
-    .getElementById("avgHours")
-    .innerText =
-    (
-        totalHours /
-        summaryData.length
-    ).toFixed(2);
+summary[date]={
+start:start,
+end:end,
+distance:0,
+trips:0
+};
 
 }
 
-function renderTable(){
+summary[date].trips++;
+summary[date].distance+=distance;
 
-    const tbody =
-    document.querySelector(
-        "#resultTable tbody"
-    );
+if(start < summary[date].start)
+summary[date].start=start;
 
-    tbody.innerHTML = "";
+if(end > summary[date].end)
+summary[date].end=end;
 
-    summaryData.forEach(item=>{
+totalTrips++;
+totalDistance+=distance;
 
-        tbody.innerHTML += `
-        <tr>
-            <td>${item.date}</td>
-            <td>${item.start}</td>
-            <td>${item.finish}</td>
-            <td>${item.hours}</td>
-        </tr>
-        `;
+});
 
-    });
+document.getElementById("days").innerHTML=
+Object.keys(summary).length;
 
-}
+document.getElementById("trips").innerHTML=
+totalTrips;
 
-function exportExcel(){
+document.getElementById("distance").innerHTML=
+totalDistance.toFixed(2);
 
-    const ws =
-    XLSX.utils.json_to_sheet(
-        summaryData
-    );
+const tbody=
+document.getElementById("tableBody");
 
-    const wb =
-    XLSX.utils.book_new();
+tbody.innerHTML="";
 
-    XLSX.utils.book_append_sheet(
-        wb,
-        ws,
-        "Summary"
-    );
+Object.keys(summary)
 
-    XLSX.writeFile(
-        wb,
-        "Driver_Summary.xlsx"
-    );
+.sort((a,b)=>{
+
+const aa=a.split('/').reverse().join('');
+const bb=b.split('/').reverse().join('');
+
+return aa.localeCompare(bb);
+
+})
+
+.forEach(date=>{
+
+const d=summary[date];
+
+tbody.innerHTML += `
+<tr>
+<td>${date}</td>
+<td>${d.start}</td>
+<td>${d.end}</td>
+<td>${d.trips}</td>
+<td>${d.distance.toFixed(2)}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("status").innerHTML=
+"✅ อ่านข้อมูลสำเร็จ "+rows.length+" รายการ";
 
 }
 
